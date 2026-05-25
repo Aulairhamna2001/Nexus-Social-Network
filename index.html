@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus — Social Network</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     AUTH OVERLAY
+═══════════════════════════════════════════ -->
+<div id="authOverlay" class="auth-overlay">
+  <div class="auth-bg">
+    <div class="auth-blob blob1"></div>
+    <div class="auth-blob blob2"></div>
+    <div class="auth-blob blob3"></div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon"><span>N</span></div>
+      <h1>Nexus</h1>
+    </div>
+    <p class="auth-tagline">Terhubung dengan dunia.</p>
+
+    <!-- Tab Switcher -->
+    <div class="auth-tabs">
+      <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">Masuk</button>
+      <button class="tab-btn" id="registerTab" onclick="switchTab('register')">Daftar</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm">
+      <div class="input-group">
+        <i data-lucide="mail" class="input-icon"></i>
+        <input type="email" id="loginEmail" placeholder="Email" autocomplete="email" />
+      </div>
+      <div class="input-group">
+        <i data-lucide="lock" class="input-icon"></i>
+        <input type="password" id="loginPassword" placeholder="Kata Sandi" autocomplete="current-password" />
+        <button class="toggle-pass" onclick="togglePass('loginPassword')"><i data-lucide="eye"></i></button>
+      </div>
+      <button class="btn-primary" onclick="loginUser()">
+        <span>Masuk</span>
+        <div class="btn-loader hidden"><div class="spinner-sm"></div></div>
+      </button>
+      <p class="auth-alt">Belum punya akun? <a onclick="switchTab('register')">Daftar sekarang</a></p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="hidden">
+      <div class="input-row">
+        <div class="input-group">
+          <i data-lucide="user" class="input-icon"></i>
+          <input type="text" id="regFirstName" placeholder="Nama Depan" />
+        </div>
+        <div class="input-group">
+          <i data-lucide="user" class="input-icon"></i>
+          <input type="text" id="regLastName" placeholder="Nama Belakang" />
+        </div>
+      </div>
+      <div class="input-group">
+        <i data-lucide="at-sign" class="input-icon"></i>
+        <input type="text" id="regUsername" placeholder="Username (unik)" />
+      </div>
+      <div class="input-group">
+        <i data-lucide="mail" class="input-icon"></i>
+        <input type="email" id="regEmail" placeholder="Email" />
+      </div>
+      <div class="input-group">
+        <i data-lucide="lock" class="input-icon"></i>
+        <input type="password" id="regPassword" placeholder="Kata Sandi (min. 6 karakter)" />
+        <button class="toggle-pass" onclick="togglePass('regPassword')"><i data-lucide="eye"></i></button>
+      </div>
+      <button class="btn-primary" onclick="registerUser()">
+        <span>Buat Akun</span>
+        <div class="btn-loader hidden"><div class="spinner-sm"></div></div>
+      </button>
+      <p class="auth-alt">Sudah punya akun? <a onclick="switchTab('login')">Masuk</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP (hidden until logged in)
+═══════════════════════════════════════════ -->
+<div id="mainApp" class="hidden">
+
+  <!-- ─── NAVBAR ─── -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="nav-logo">
+        <div class="logo-icon sm"><span>N</span></div>
+        <span class="logo-text">Nexus</span>
+      </div>
+      <div class="search-bar">
+        <i data-lucide="search"></i>
+        <input type="text" id="searchInput" placeholder="Cari orang, postingan…" oninput="handleSearch(this.value)" />
+        <div id="searchResults" class="search-dropdown hidden"></div>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <button class="nav-tab active" id="navFeed" onclick="showSection('feed')" title="Beranda">
+        <i data-lucide="home"></i>
+      </button>
+      <button class="nav-tab" id="navFriends" onclick="showSection('friends')" title="Teman">
+        <i data-lucide="users"></i>
+      </button>
+      <button class="nav-tab" id="navChat" onclick="showSection('chat')" title="Chat">
+        <i data-lucide="message-circle"></i>
+        <span class="badge hidden" id="chatBadge">0</span>
+      </button>
+      <button class="nav-tab" id="navNotif" onclick="showSection('notif')" title="Notifikasi">
+        <i data-lucide="bell"></i>
+        <span class="badge hidden" id="notifBadge">0</span>
+      </button>
+    </div>
+
+    <div class="nav-right">
+      <button class="icon-btn" onclick="toggleDark()" title="Dark Mode">
+        <i data-lucide="moon" id="darkIcon"></i>
+      </button>
+      <div class="nav-avatar-wrap" onclick="toggleProfileMenu()">
+        <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=1877f2&color=fff" class="nav-avatar" alt="avatar" />
+        <div id="profileMenu" class="profile-menu hidden">
+          <div class="pm-header">
+            <img id="pmAvatar" src="" class="pm-avatar" alt="" />
+            <div>
+              <p id="pmName" class="pm-name"></p>
+              <p id="pmUsername" class="pm-uname"></p>
+            </div>
+          </div>
+          <hr />
+          <button onclick="showSection('profile'); toggleProfileMenu()"><i data-lucide="user"></i> Profil Saya</button>
+          <button onclick="openEditProfile(); toggleProfileMenu()"><i data-lucide="settings"></i> Edit Profil</button>
+          <hr />
+          <button class="danger-btn" onclick="logoutUser()"><i data-lucide="log-out"></i> Keluar</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── PAGE WRAPPER ─── -->
+  <div class="page-wrapper">
+
+    <!-- ════ FEED SECTION ════ -->
+    <section id="sectionFeed" class="section active">
+      <div class="three-col">
+
+        <!-- Sidebar Left -->
+        <aside class="sidebar-left">
+          <div class="sidebar-card">
+            <div class="sb-user" onclick="showSection('profile')">
+              <img id="sbAvatar" src="" class="sb-avatar" alt="" />
+              <div>
+                <p id="sbName" class="sb-name"></p>
+                <p id="sbUsername" class="sb-uname"></p>
+              </div>
+            </div>
+          </div>
+          <div class="sidebar-card">
+            <h4 class="sb-title">Navigasi</h4>
+            <nav class="sb-nav">
+              <a onclick="showSection('feed')"><i data-lucide="home"></i> Beranda</a>
+              <a onclick="showSection('friends')"><i data-lucide="users"></i> Teman</a>
+              <a onclick="showSection('profile')"><i data-lucide="user"></i> Profil</a>
+              <a onclick="showSection('chat')"><i data-lucide="message-circle"></i> Chat</a>
+              <a onclick="showSection('notif')"><i data-lucide="bell"></i> Notifikasi</a>
+            </nav>
+          </div>
+          <div class="sidebar-card hashtag-card">
+            <h4 class="sb-title">Trending</h4>
+            <div class="hashtags">
+              <span>#Nexus2026</span><span>#TechNews</span><span>#CodeLife</span>
+              <span>#DesignUI</span><span>#Firebase</span><span>#WebDev</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Feed Center -->
+        <main class="feed-center">
+          <!-- Create Post -->
+          <div class="create-post card">
+            <div class="cp-top">
+              <img id="cpAvatar" src="" class="cp-avatar" alt="" />
+              <div class="cp-input" onclick="openPostModal()">
+                <span id="cpPlaceholder">Apa yang ada di pikiranmu?</span>
+              </div>
+            </div>
+            <div class="cp-actions">
+              <button onclick="openPostModal('image')"><i data-lucide="image"></i> Foto</button>
+              <button onclick="openPostModal()"><i data-lucide="smile"></i> Perasaan</button>
+              <button onclick="openPostModal()"><i data-lucide="map-pin"></i> Lokasi</button>
+            </div>
+          </div>
+
+          <!-- Feed Posts -->
+          <div id="feedContainer">
+            <div class="feed-loading">
+              <div class="skeleton-card"><div class="sk-header"></div><div class="sk-line"></div><div class="sk-line short"></div><div class="sk-img"></div></div>
+              <div class="skeleton-card"><div class="sk-header"></div><div class="sk-line"></div><div class="sk-line short"></div></div>
+            </div>
+          </div>
+          <div id="feedEnd" class="feed-end hidden">
+            <p>Kamu sudah melihat semua postingan 🎉</p>
+          </div>
+        </main>
+
+        <!-- Sidebar Right -->
+        <aside class="sidebar-right">
+          <div class="sidebar-card">
+            <h4 class="sb-title">Orang yang Mungkin Kamu Kenal</h4>
+            <div id="suggestedUsers"></div>
+          </div>
+          <div class="sidebar-card">
+            <h4 class="sb-title">Teman Online</h4>
+            <div id="onlineFriends" class="online-list"></div>
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- ════ FRIENDS SECTION ════ -->
+    <section id="sectionFriends" class="section hidden">
+      <div class="section-inner">
+        <h2 class="section-title"><i data-lucide="users"></i> Temukan Teman</h2>
+        <div id="allUsersList" class="users-grid"></div>
+      </div>
+    </section>
+
+    <!-- ════ CHAT SECTION ════ -->
+    <section id="sectionChat" class="section hidden">
+      <div class="chat-layout">
+        <div class="chat-sidebar">
+          <div class="cs-header">
+            <h3>Pesan</h3>
+            <button class="icon-btn" onclick=""><i data-lucide="edit"></i></button>
+          </div>
+          <div class="cs-search">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Cari percakapan…" oninput="filterChats(this.value)" />
+          </div>
+          <div id="chatList" class="chat-list"></div>
+        </div>
+        <div class="chat-main" id="chatMain">
+          <div class="chat-empty">
+            <i data-lucide="message-circle" style="width:48px;height:48px;opacity:.3"></i>
+            <p>Pilih percakapan untuk memulai chat</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ NOTIFICATIONS SECTION ════ -->
+    <section id="sectionNotif" class="section hidden">
+      <div class="section-inner">
+        <h2 class="section-title"><i data-lucide="bell"></i> Notifikasi</h2>
+        <div id="notifList" class="notif-list"></div>
+      </div>
+    </section>
+
+    <!-- ════ PROFILE SECTION ════ -->
+    <section id="sectionProfile" class="section hidden">
+      <div class="profile-page">
+        <div class="profile-cover" id="profileCover">
+          <div class="cover-overlay"></div>
+        </div>
+        <div class="profile-info-card card">
+          <div class="pi-left">
+            <div class="pi-avatar-wrap">
+              <img id="profileAvatar" src="" class="pi-avatar" alt="" />
+              <label class="avatar-upload-btn" title="Ganti Foto">
+                <i data-lucide="camera"></i>
+                <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar(this)" hidden />
+              </label>
+            </div>
+            <div class="pi-details">
+              <h2 id="profileName"></h2>
+              <p id="profileUsername" class="pi-uname"></p>
+              <p id="profileBio" class="pi-bio"></p>
+              <div class="pi-stats">
+                <div><strong id="statPosts">0</strong><span>Postingan</span></div>
+                <div><strong id="statFollowers">0</strong><span>Pengikut</span></div>
+                <div><strong id="statFollowing">0</strong><span>Mengikuti</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="pi-actions">
+            <button class="btn-primary sm" onclick="openEditProfile()"><i data-lucide="edit-2"></i> Edit Profil</button>
+          </div>
+        </div>
+        <div id="profilePosts" class="profile-posts"></div>
+      </div>
+    </section>
+
+  </div><!-- end page-wrapper -->
+</div><!-- end mainApp -->
+
+<!-- ═══════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════ -->
+
+<!-- Create Post Modal -->
+<div id="postModal" class="modal-overlay hidden" onclick="closeModalOutside(event,'postModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Buat Postingan</h3>
+      <button class="icon-btn" onclick="closeModal('postModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="post-author">
+        <img id="modalAvatar" src="" class="cp-avatar" alt="" />
+        <div>
+          <p id="modalName" class="fw-600"></p>
+          <select id="postPrivacy" class="privacy-select">
+            <option value="public">🌍 Publik</option>
+            <option value="friends">👥 Teman</option>
+            <option value="private">🔒 Privat</option>
+          </select>
+        </div>
+      </div>
+      <textarea id="postText" placeholder="Apa yang ada di pikiranmu?" rows="4" maxlength="1000"></textarea>
+      <div id="postImagePreview" class="post-img-preview hidden">
+        <img id="previewImg" src="" alt="" />
+        <button class="remove-img" onclick="removePostImage()"><i data-lucide="x"></i></button>
+      </div>
+      <div id="charCount" class="char-count">0/1000</div>
+    </div>
+    <div class="modal-footer">
+      <div class="post-add-actions">
+        <label title="Tambah Foto">
+          <i data-lucide="image"></i>
+          <input type="file" id="postImageInput" accept="image/*" onchange="previewPostImage(this)" hidden />
+        </label>
+        <button title="Emoji" onclick=""><i data-lucide="smile"></i></button>
+      </div>
+      <button class="btn-primary" onclick="submitPost()">
+        <span>Posting</span>
+        <div class="btn-loader hidden"><div class="spinner-sm"></div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal-overlay hidden" onclick="closeModalOutside(event,'editProfileModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Edit Profil</h3>
+      <button class="icon-btn" onclick="closeModal('editProfileModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="ep-avatar-section">
+        <img id="epAvatar" src="" class="ep-avatar" alt="" />
+        <label class="btn-outline sm">
+          <i data-lucide="camera"></i> Ganti Foto
+          <input type="file" accept="image/*" onchange="uploadAvatar(this)" hidden />
+        </label>
+      </div>
+      <div class="input-group">
+        <i data-lucide="user" class="input-icon"></i>
+        <input type="text" id="epFirstName" placeholder="Nama Depan" />
+      </div>
+      <div class="input-group">
+        <i data-lucide="user" class="input-icon"></i>
+        <input type="text" id="epLastName" placeholder="Nama Belakang" />
+      </div>
+      <div class="input-group">
+        <i data-lucide="file-text" class="input-icon"></i>
+        <input type="text" id="epBio" placeholder="Bio singkat…" maxlength="150" />
+      </div>
+      <div class="input-group">
+        <i data-lucide="map-pin" class="input-icon"></i>
+        <input type="text" id="epLocation" placeholder="Lokasi" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('editProfileModal')">Batal</button>
+      <button class="btn-primary" onclick="saveProfile()">
+        <span>Simpan</span>
+        <div class="btn-loader hidden"><div class="spinner-sm"></div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Comments Modal -->
+<div id="commentModal" class="modal-overlay hidden" onclick="closeModalOutside(event,'commentModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>Komentar</h3>
+      <button class="icon-btn" onclick="closeModal('commentModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body" id="commentsList" style="max-height:350px;overflow-y:auto;"></div>
+    <div class="modal-footer comment-input-wrap">
+      <img id="commentAvatar" src="" class="cp-avatar" alt="" />
+      <div class="comment-input-row">
+        <input type="text" id="commentInput" placeholder="Tulis komentar…" onkeydown="if(event.key==='Enter')submitComment()" />
+        <button class="icon-btn send-btn" onclick="submitComment()"><i data-lucide="send"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
+  <button class="lb-close"><i data-lucide="x"></i></button>
+  <img id="lbImg" src="" alt="" />
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Full-page Loader -->
+<div id="pageLoader" class="page-loader">
+  <div class="logo-icon"><span>N</span></div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+</div>
+
+<script src="firebase.js" type="module"></script>
+<script src="app.js" type="module"></script>
+</body>
+  </html>
